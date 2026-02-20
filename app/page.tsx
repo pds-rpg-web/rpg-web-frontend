@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -22,6 +23,7 @@ import { Mail, Lock, User, Shield, Swords, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Home() {
+  const router = useRouter();
   const [emailLogin, setEmailLogin] = useState("");
   const [passwordLogin, setPasswordLogin] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
@@ -56,6 +58,8 @@ export default function Home() {
       toast.success("Bem-vindo de volta!", {
         description: "A taverna estava à sua espera. Puxe uma cadeira!",
       });
+
+      router.push("/create-character");
     }, 1000);
   };
 
@@ -89,6 +93,8 @@ export default function Home() {
       setEmailRegister("");
       setPasswordRegister("");
       setPasswordConfirm("");
+
+      router.push("/create-character");
     }, 1000);
   };
 
@@ -126,7 +132,6 @@ export default function Home() {
             </TabsTrigger>
           </TabsList>
 
-          {/* TELA DE LOGIN */}
           <TabsContent value="login" className="mt-4 focus-visible:outline-none focus-visible:ring-0">
             <form onSubmit={handleLogin}>
               <Card className="border-zinc-800/60 bg-zinc-950/60 backdrop-blur-xl shadow-2xl shadow-black/50 text-zinc-100">
@@ -188,7 +193,6 @@ export default function Home() {
             </form>
           </TabsContent>
 
-          {/* TELA DE CADASTRO */}
           <TabsContent value="register" className="mt-4 focus-visible:outline-none focus-visible:ring-0">
             <form onSubmit={handleRegister}>
               <Card className="border-zinc-800/60 bg-zinc-950/60 backdrop-blur-xl shadow-2xl shadow-black/50 text-zinc-100">

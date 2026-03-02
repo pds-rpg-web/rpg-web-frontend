@@ -11,11 +11,16 @@ import { toast } from "sonner";
 import {
     Swords, Wand2, Shield, Crosshair,
     User, Mountain, Leaf, Flame,
-    Dumbbell, PersonStanding, Brain, BookOpen
+    Dumbbell, PersonStanding, Brain, BookOpen,
+    LogOut, ArrowRight, ArrowLeft
 } from "lucide-react";
 
 export default function CriarPersonagemPage() {
     const router = useRouter();
+
+    // Controle do passo a passo
+    const [currentStep, setCurrentStep] = useState("identidade");
+    const steps = ["identidade", "classe", "poderes"];
 
     const [character, setCharacter] = useState({
         raca: "",
@@ -24,10 +29,9 @@ export default function CriarPersonagemPage() {
         destreza: 10,
         inteligencia: 10,
         poderPrincipal: "",
-        background: "",
     });
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setCharacter((prev) => ({ ...prev, [name]: value }));
     };
@@ -37,18 +41,57 @@ export default function CriarPersonagemPage() {
     };
 
     const handleSaveCharacter = () => {
-        console.log("Personagem salvo:", character);
+        localStorage.setItem("rpg-character", JSON.stringify(character));
+
         toast.success("Personagem criado com sucesso!", {
             description: "Sua jornada épica está prestes a começar.",
         });
+        
+        router.push("/combat");
+    };
+
+    const handleLogout = () => {
+        router.push("/");
+        toast.info("Você saiu da guilda.");
+    };
+
+    const goNext = () => {
+        const currentIndex = steps.indexOf(currentStep);
+        if (currentIndex < steps.length - 1) {
+            setCurrentStep(steps[currentIndex + 1]);
+        }
+    };
+
+    const goPrev = () => {
+        const currentIndex = steps.indexOf(currentStep);
+        if (currentIndex > 0) {
+            setCurrentStep(steps[currentIndex - 1]);
+        }
+    };
+
+    const canGoNext = () => {
+        if (currentStep === "identidade") return character.raca !== "";
+        if (currentStep === "classe") return character.classe !== "";
+        return false;
     };
 
     const isFormValid = character.raca && character.classe && character.poderPrincipal;
 
     return (
-        <div className="relative flex min-h-screen flex-col items-center py-12 px-4 sm:px-6 lg:px-8 bg-black font-sans text-zinc-50 selection:bg-amber-900/50 dark overflow-x-hidden">
+        <div className="relative flex min-h-screen flex-col items-center py-8 px-4 sm:px-6 lg:px-8 bg-black font-sans text-zinc-50 selection:bg-amber-900/50 dark overflow-x-hidden">
             <div className="fixed top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-200 h-200 bg-amber-600/10 rounded-full blur-[120px] pointer-events-none"></div>
             <div className="fixed inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 mix-blend-overlay pointer-events-none"></div>
+
+            <div className="z-20 w-full max-w-5xl flex justify-end mb-4">
+                <Button 
+                    variant="ghost" 
+                    onClick={handleLogout}
+                    className="text-zinc-400 hover:text-red-400 hover:bg-red-950/30 transition-colors"
+                >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Deslogar
+                </Button>
+            </div>
 
             <div className="z-10 max-w-4xl w-full space-y-8 animate-in fade-in zoom-in-95 duration-700">
 
@@ -60,16 +103,19 @@ export default function CriarPersonagemPage() {
                         O Tomo da Criação
                     </h1>
                     <p className="text-lg text-zinc-400 font-medium max-w-2xl mx-auto">
-                        Molde seu avatar. Suas escolhas aqui ecoarão pela eternidade nas terras da Guilda Digital.
+                        Molde seu avatar. Suas escolhas aqui ecoarão pela eternidade.
                     </p>
                 </div>
 
-                <Tabs defaultValue="identidade" className="w-full">
-                    <TabsList className="grid w-full grid-cols-4 bg-zinc-900/80 backdrop-blur-md border border-zinc-800/80 text-zinc-400 min-h-12 rounded-lg gap-1">
-                        <TabsTrigger value="identidade" className=" data-[state=active]:bg-amber-900/30 data-[state=active]:text-amber-400 data-[state=active]:shadow-sm transition-all rounded-md">1. Origem</TabsTrigger>
-                        <TabsTrigger value="classe" className=" data-[state=active]:bg-amber-900/30 data-[state=active]:text-amber-400 data-[state=active]:shadow-sm transition-all rounded-md">2. Caminho</TabsTrigger>
-                        <TabsTrigger value="poderes" className=" data-[state=active]:bg-amber-900/30 data-[state=active]:text-amber-400 data-[state=active]:shadow-sm transition-all rounded-md">3. Dádivas</TabsTrigger>
-                        <TabsTrigger value="historia" className=" data-[state=active]:bg-amber-900/30 data-[state=active]:text-amber-400 data-[state=active]:shadow-sm transition-all rounded-md">4. Lenda</TabsTrigger>
+                <div className="flex justify-center items-center gap-2 text-sm font-medium text-amber-500/80 bg-amber-950/30 border border-amber-900/50 px-4 py-2 rounded-full w-fit mx-auto">
+                    Passo {steps.indexOf(currentStep) + 1} de {steps.length}
+                </div>
+
+                <Tabs value={currentStep} onValueChange={setCurrentStep} className="w-full">
+                    <TabsList className="grid w-full grid-cols-3 bg-zinc-900/80 backdrop-blur-md border border-zinc-800/80 text-zinc-400 min-h-12 rounded-lg gap-1 pointer-events-none">
+                        <TabsTrigger value="identidade" className="data-[state=active]:bg-amber-900/30 data-[state=active]:text-amber-400 data-[state=active]:shadow-sm transition-all rounded-md">1. Origem</TabsTrigger>
+                        <TabsTrigger value="classe" className="data-[state=active]:bg-amber-900/30 data-[state=active]:text-amber-400 data-[state=active]:shadow-sm transition-all rounded-md">2. Caminho</TabsTrigger>
+                        <TabsTrigger value="poderes" className="data-[state=active]:bg-amber-900/30 data-[state=active]:text-amber-400 data-[state=active]:shadow-sm transition-all rounded-md">3. Dádivas</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="identidade" className="mt-6 focus-visible:outline-none focus-visible:ring-0">
@@ -115,7 +161,6 @@ export default function CriarPersonagemPage() {
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-8">
-
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {[
                                         { id: "Guerreiro", icon: Swords, color: "text-red-400", desc: "Mestres do combate corpo-a-corpo." },
@@ -165,7 +210,6 @@ export default function CriarPersonagemPage() {
                                         </div>
                                     </div>
                                 </div>
-
                             </CardContent>
                         </Card>
                     </TabsContent>
@@ -181,10 +225,10 @@ export default function CriarPersonagemPage() {
                             <CardContent>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {[
-                                        { nome: "Golpe Devastador", desc: "Ataque físico que ignora 30% da armadura inimiga." },
-                                        { nome: "Chama Eterna", desc: "Invoca um fogo mágico que queima inimigos em área ao longo do tempo." },
-                                        { nome: "Passos de Sombra", desc: "Permite ficar invisível por um curto período, garantindo dano crítico no próximo ataque." },
-                                        { nome: "Luz Guiadora", desc: "Cura ferimentos severos e concede um escudo mágico temporário a um aliado." }
+                                        { nome: "Golpe Devastador", desc: "Ataque físico que ignora armadura e destrói escudos." },
+                                        { nome: "Chama Eterna", desc: "Invoca um fogo mágico garantido usando pura inteligência." },
+                                        { nome: "Passos de Sombra", desc: "Fica invisível e causa dano dobrado no próximo ataque." },
+                                        { nome: "Luz Guiadora", desc: "Restaura os próprios ferimentos em batalha." }
                                     ].map((poder) => (
                                         <div
                                             key={poder.nome}
@@ -207,43 +251,39 @@ export default function CriarPersonagemPage() {
                             </CardContent>
                         </Card>
                     </TabsContent>
-
-                    <TabsContent value="historia" className="mt-6 focus-visible:outline-none focus-visible:ring-0">
-                        <Card className="border-zinc-800/60 bg-zinc-950/80 backdrop-blur-xl shadow-2xl text-zinc-100">
-                            <CardHeader>
-                                <CardTitle className="text-2xl text-amber-100">A Lenda Começa</CardTitle>
-                                <CardDescription className="text-zinc-400">
-                                    Escreva os detalhes do seu passado. O que o trouxe até a Guilda?
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="background" className="text-zinc-300">Pergaminho de Histórico</Label>
-                                    <textarea
-                                        id="background"
-                                        name="background"
-                                        rows={8}
-                                        value={character.background}
-                                        onChange={handleInputChange}
-                                        placeholder="Nas sombras das montanhas esquecidas, eu fui treinado para..."
-                                        className="flex w-full rounded-md border border-zinc-800 bg-zinc-900/50 px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-1 focus:ring-amber-500/50 focus:border-amber-500/50 transition-colors resize-none"
-                                    />
-                                </div>
-                            </CardContent>
-                            <CardFooter className="pt-6 border-t border-zinc-800/80">
-                                <Button
-                                    onClick={handleSaveCharacter}
-                                    disabled={!isFormValid}
-                                    className="w-full bg-linear-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white shadow-[0_0_20px_rgba(217,119,6,0.2)] hover:shadow-[0_0_25px_rgba(217,119,6,0.4)] border border-amber-500/30 transition-all duration-300 font-semibold text-lg py-6 disabled:opacity-50 disabled:grayscale"
-                                >
-                                    <Swords className="mr-2 h-5 w-5" />
-                                    Concluir Criação e Iniciar Jornada
-                                </Button>
-                            </CardFooter>
-                        </Card>
-                    </TabsContent>
-
                 </Tabs>
+
+                {/* Botões de Navegação (Wizard) */}
+                <div className="flex justify-between items-center mt-8 gap-4">
+                    <Button 
+                        onClick={goPrev} 
+                        disabled={currentStep === "identidade"}
+                        variant="outline"
+                        className="bg-zinc-900/50 border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white"
+                    >
+                        <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
+                    </Button>
+
+                    {currentStep !== "poderes" ? (
+                        <Button 
+                            onClick={goNext} 
+                            disabled={!canGoNext()}
+                            className="bg-amber-600 hover:bg-amber-500 text-white shadow-[0_0_15px_rgba(217,119,6,0.2)]"
+                        >
+                            Avançar <ArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
+                    ) : (
+                        <Button
+                            onClick={handleSaveCharacter}
+                            disabled={!isFormValid}
+                            className="bg-linear-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white shadow-[0_0_20px_rgba(16,185,129,0.3)] border border-emerald-500/30 transition-all font-semibold"
+                        >
+                            <Swords className="mr-2 h-5 w-5" />
+                            Concluir e Iniciar
+                        </Button>
+                    )}
+                </div>
+
             </div>
         </div>
     );
